@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReelCraft AI — Next-Gen Automated Video Studio</title>
+  <meta name="description" content="Commercial-grade AI Video Studio & SaaS Engine: Viral Shorts, Personal Reels, Product Ads with Auto Gap-Filling, Royal Invitations, and 3D Cartoon Kahaniyan.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+  <div class="bg-glow glow-3"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3" fill="url(#brandGrad)"></polygon>
+          <defs>
+            <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#F59E0B" />
+              <stop offset="100%" stop-color="#EC4899" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">ReelCraft<span class="text-gradient">.ai</span></span>
+        <span class="brand-subtitle">Commercial Video Studio v1.0</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="status-badge" id="systemStatusBadge">
+        <span class="pulsing-dot"></span>
+        <span id="systemStatusText">AI Engine Online • Nirmala Zero-Tofu Ready</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- Tier Selector Toggle -->
+      <div class="tier-pill" id="tierToggleBtn" title="Click to simulate Free vs Paid Tier">
+        <span class="tier-label" id="tierLabel">Free Tier (1 Video Free)</span>
+        <span class="tier-badge" id="tierBadge">Watermark ON</span>
+      </div>
+      <a href="/docs" target="_blank" class="nav-link-btn" title="Open FastAPI Interactive API Documentation">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        API Docs
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-layout">
+    <!-- Left Column: Creation Modes & Form -->
+    <section class="creation-panel glass-card">
+      <!-- Mode Tabs Navigation -->
+      <nav class="mode-nav" role="tablist">
+        <button class="mode-tab active" data-mode="text_to_video" id="tab-text-to-video">
+          <span class="tab-icon">🎬</span>
+          <span class="tab-text">Text to Reel</span>
+        </button>
+        <button class="mode-tab" data-mode="personal_reel" id="tab-personal-reel">
+          <span class="tab-icon">📸</span>
+          <span class="tab-text">3D Creator Reel</span>
+        </button>
+        <button class="mode-tab" data-mode="product_ad" id="tab-product-ad">
+          <span class="tab-icon">🏷️</span>
+          <span class="tab-text">Brand & Ad</span>
+        </button>
+        <button class="mode-tab" data-mode="digital_invitation" id="tab-invitation">
+          <span class="tab-icon">💌</span>
+          <span class="tab-text">Royal Invitation</span>
+        </button>
+        <button class="mode-tab" data-mode="cartoon_story" id="tab-cartoon">
+          <span class="tab-icon">🧚</span>
+          <span class="tab-text">3D Cartoon Story</span>
+        </button>
+        <button class="mode-tab" data-mode="admin_vault" id="tab-admin">
+          <span class="tab-icon">⚡</span>
+          <span class="tab-text">Job Vault</span>
+        </button>
+      </nav>
+
+      <!-- Dynamic Form Area -->
+      <div class="form-container">
+        
+        <!-- Mode 1: Text to Reel -->
+        <form id="form-text_to_video" class="mode-form active">
+          <div class="form-header">
+            <h3>Viral Shorts & Reel Generator</h3>
+            <p>Generate high-retention viral reels from a single prompt with Hormozi-style Devanagari subtitles.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="text-topic">Prompt or Video Topic</label>
+            <textarea id="text-topic" rows="3" placeholder="e.g., 3 Mind-blowing facts about Mars and space exploration..." required>3 incredible facts about Mars in Hindi</textarea>
+            
+            <div class="prompt-chips">
+              <span class="chip" onclick="setPromptText('text-topic', 'Top 3 Psychological tricks to read anyone instantly')">🧠 Psychology Tricks</span>
+              <span class="chip" onclick="setPromptText('text-topic', 'Bhangarh Kile ka rahasya aur daravani kahani')">🏰 Bhangarh Fort</span>
+              <span class="chip" onclick="setPromptText('text-topic', 'How Chandrayaan 3 created Indian history')">🚀 Chandrayaan 3</span>
+              <span class="chip" onclick="setPromptText('text-topic', '3 Rules of Money that school never taught you')">💰 Money Rules</span>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="form-group">
+              <label for="text-lang">Language</label>
+              <select id="text-lang">
+                <option value="hi" selected>Hindi / Hinglish (Madhur Neural)</option>
+                <option value="en">English (US Christopher)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="text-duration">Duration Mode</label>
+              <select id="text-duration">
+                <option value="30s" selected>30s Viral Reel (Free & Paid)</option>
+                <option value="60s">60s Standard Story</option>
+                <option value="3min">3-Minute YouTube Long (Pro)</option>
+                <option value="4min">4-Minute Master Episode (Pro)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="text-aspect">Aspect Ratio</label>
+              <select id="text-aspect">
+                <option value="9:16" selected>9:16 (Reels/Shorts)</option>
+                <option value="16:9">16:9 (YouTube Standard)</option>
+                <option value="1:1">1:1 (Square Feed)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="text-audio-file">Own Voice-Note (Optional)</label>
+              <input type="file" id="text-audio-file" accept="audio/*" class="file-input">
+              <small class="hint">Upload WhatsApp audio or MP3 to bypass AI voice.</small>
+            </div>
+
+            <div class="form-group toggles-group">
+              <label>Audio & Branding Settings</label>
+              <div class="checkbox-pill">
+                <input type="checkbox" id="text-bgm" checked>
+                <label for="text-bgm">Auto BGM with Voice Ducking</label>
+              </div>
+              <div class="checkbox-pill">
+                <input type="checkbox" id="text-social-pack" checked>
+                <label for="text-social-pack">Auto Social Pack (Title, Tags)</label>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="btn-submit-text">
+            <span class="btn-text">⚡ Generate Viral Reel Now</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </form>
+
+        <!-- Mode 2: Personal Creator Reel -->
+        <form id="form-personal_reel" class="mode-form">
+          <div class="form-header">
+            <h3>Personal Creator 3D Reel</h3>
+            <p>Upload photos from your gallery. AI creates 3D Ken Burns motion, beat-synced music, and emotional narration.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="personal-prompt">Memory / Story Context</label>
+            <textarea id="personal-prompt" rows="2" placeholder="e.g., College trip to Manali with best friends, snowy mountains and fun times..." required>Memorable road trip to Goa with best friends, sunset beaches and unforgettable laughter</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Upload Photos (1 to 8 images)</label>
+            <div class="drop-zone" id="personal-dropzone" onclick="document.getElementById('personal-images').click()">
+              <div class="drop-zone-icon">📷</div>
+              <div class="drop-zone-text">Click or drag photos here (JPG, PNG, WEBP)</div>
+              <div class="drop-zone-sub">3D Pan & Zoom will be automatically applied</div>
+              <input type="file" id="personal-images" accept="image/*" multiple style="display:none">
+            </div>
+            <div class="preview-thumbnails" id="personal-thumbs"></div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="personal-lang">Narration Language</label>
+              <select id="personal-lang">
+                <option value="hi" selected>Hindi / Hinglish</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="personal-aspect">Aspect Ratio</label>
+              <select id="personal-aspect">
+                <option value="9:16" selected>9:16 (Instagram Reel)</option>
+                <option value="16:9">16:9 (YouTube Vlog)</option>
+                <option value="1:1">1:1 (Post Feed)</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="btn-submit-personal">
+            <span class="btn-text">📸 Craft 3D Photo Reel</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </form>
+
+        <!-- Mode 3: Brand & Product Ad -->
+        <form id="form-product_ad" class="mode-form">
+          <div class="form-header">
+            <h3>Brand & Product Commercial Ad</h3>
+            <p>High-converting commercial with transparent brand logo, actual product photos, and auto gap-filling lifestyle B-roll.</p>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="ad-product-name">Product / Brand Name</label>
+              <input type="text" id="ad-product-name" placeholder="e.g. Royal Oud Luxury Attar" required value="Royal Oud Luxury Perfume">
+            </div>
+            <div class="form-group">
+              <label for="ad-offer">Special Offer / Discount Banner</label>
+              <input type="text" id="ad-offer" placeholder="e.g. FLAT 30% OFF | DIWALI SPECIAL" value="FLAT 25% OFF | LIMITED FESTIVE OFFER">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="ad-desc">Product Features & Benefits</label>
+            <textarea id="ad-desc" rows="2" placeholder="e.g. 24-hour long lasting luxury fragrance with french ingredients..." required>Pure non-alcoholic royal oud fragrance that lasts for 24 hours, perfect for weddings, parties, and everyday elegance.</textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="ad-cta">Call-To-Action (Outro Headline)</label>
+            <input type="text" id="ad-cta" placeholder="e.g. Order Now | Link in Bio | Free Delivery" value="Shop Now at www.royaloud.in | Free Cash on Delivery">
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Product Photos</label>
+              <input type="file" id="ad-product-images" accept="image/*" multiple class="file-input">
+              <small class="hint">Upload 1-4 clear photos of the product bottle/pack.</small>
+              <div class="preview-thumbnails" id="ad-thumbs"></div>
+            </div>
+
+            <div class="form-group">
+              <label>Brand Logo (PNG with transparent bg)</label>
+              <input type="file" id="ad-logo-image" accept="image/*" class="file-input">
+              <small class="hint">Overlaid permanently at the top corner of the ad.</small>
+              <div class="preview-thumbnails" id="logo-thumb"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-pill">
+              <input type="checkbox" id="ad-auto-gap-fill" checked>
+              <label for="ad-auto-gap-fill">Auto Gap-Filling: Seamlessly blend lifestyle customer B-roll between product shots</label>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="btn-submit-ad">
+            <span class="btn-text">🏷️ Generate Commercial Ad</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </form>
+
+        <!-- Mode 4: Digital Video Invitation -->
+        <form id="form-digital_invitation" class="mode-form">
+          <div class="form-header">
+            <h3>Royal Festive & Event Invitation</h3>
+            <p>Create royal Indian invitations for Weddings, Birthdays, Housewarming & Anniversaries with gold animations & shehnai music.</p>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="inv-type">Event Type</label>
+              <select id="inv-type">
+                <option value="wedding" selected>Grand Royal Wedding (Vivah Utsav)</option>
+                <option value="birthday">Birthday Party Celebration</option>
+                <option value="housewarming">Griha Pravesh (Housewarming)</option>
+                <option value="anniversary">Silver / Golden Anniversary</option>
+                <option value="business_opening">Grand Store Opening / Launch</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="inv-hosts">Couple / Host Names</label>
+              <input type="text" id="inv-hosts" placeholder="e.g. Aman & Priya" required value="Aditya & Shreya">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="inv-date">Event Date & Time</label>
+              <input type="text" id="inv-date" placeholder="e.g. 18th December 2026, 7:00 PM onwards" required value="Sunday, 15th November 2026, 7:00 PM Onwards">
+            </div>
+
+            <div class="form-group">
+              <label for="inv-venue">Venue Details</label>
+              <input type="text" id="inv-venue" placeholder="e.g. The Grand Palace Resort, Udaipur" required value="The Grand Imperial Palace Resort, Udaipur">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="inv-rsvp">RSVP & Contacts</label>
+              <input type="text" id="inv-rsvp" placeholder="e.g. Sharma Family: 9876543210" value="Sharma & Kapoor Family | RSVP: +91 98765 43210">
+            </div>
+
+            <div class="form-group">
+              <label for="inv-music">Music Vibe</label>
+              <select id="inv-music">
+                <option value="royal_shehnai" selected>Royal Indian Shehnai & Dhol</option>
+                <option value="celebration">Upbeat Festive Celebration</option>
+                <option value="acoustic">Romantic Acoustic & Flute</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Couple / Celebrant Photos (Optional)</label>
+            <input type="file" id="inv-photos" accept="image/*" multiple class="file-input">
+            <div class="preview-thumbnails" id="inv-thumbs"></div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="btn-submit-invitation">
+            <span class="btn-text">💌 Generate Royal Video Card</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </form>
+
+        <!-- Mode 5: AI 3D Cartoon Storyteller -->
+        <form id="form-cartoon_story" class="mode-form">
+          <div class="form-header">
+            <h3>3D Cartoon & Kahaniyan Studio</h3>
+            <p>Generate Disney/Pixar 3D animated stories, moral kahaniyan, and folk tales with character art and expressive storytelling voice.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="cartoon-topic">Story Plot or Concept</label>
+            <textarea id="cartoon-topic" rows="3" placeholder="e.g. Jungle me nanhe chidiya ki himmat aur jaadui ped ka rahasya..." required>Jungle me chatur khargosh aur ghamandi sher ki kahani, jisme khargosh ne apni buddhi se sabhi janwaron ki jaan bachai</textarea>
+            
+            <div class="prompt-chips">
+              <span class="chip" onclick="setPromptText('cartoon-topic', 'Jaadui jharne aur bimar maa ke liye bahadur ladke ka sahas')">🌊 Jaadui Jharna</span>
+              <span class="chip" onclick="setPromptText('cartoon-topic', 'Gaon ke gareeb bachhe ka sapna aur uska pehla robot dost')">🤖 Robot Dost</span>
+              <span class="chip" onclick="setPromptText('cartoon-topic', 'Lalchi kauwa aur samajhdaar tote ki moral kahani')">🦜 Samajhdaar Tota</span>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="form-group">
+              <label for="cartoon-style">Character & Art Style</label>
+              <select id="cartoon-style">
+                <option value="3d_pixar" selected>3D Pixar Animated 8K</option>
+                <option value="anime">Cinematic Anime (Makoto Shinkai)</option>
+                <option value="2d_disney">Classic 2D Disney Storybook</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="cartoon-duration">Duration</label>
+              <select id="cartoon-duration">
+                <option value="30s">30s Short Story (Reel)</option>
+                <option value="60s" selected>60s Moral Tale (Reel)</option>
+                <option value="3min">3-Minute YouTube Kahani (Pro)</option>
+                <option value="4min">4-Minute Master Episode (Pro)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="cartoon-aspect">Aspect Ratio</label>
+              <select id="cartoon-aspect">
+                <option value="9:16" selected>9:16 (Vertical Reel/Short)</option>
+                <option value="16:9">16:9 (YouTube Landscape)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-pill">
+              <input type="checkbox" id="cartoon-sfx" checked>
+              <label for="cartoon-sfx">Magical Storybook Score & Ambient Sound FX</label>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="btn-submit-cartoon">
+            <span class="btn-text">🧚 Create 3D Cartoon Kahani</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </form>
+
+        <!-- Mode 6: Admin Job Vault -->
+        <div id="form-admin_vault" class="mode-form">
+          <div class="form-header">
+            <h3>Admin & Job Vault</h3>
+            <p>Monitor live backend rendering queues, download historic videos, inspect metadata, and simulate tier restrictions.</p>
+          </div>
+
+          <div class="admin-controls">
+            <button class="action-btn" onclick="refreshAdminJobs()">🔄 Refresh Job Vault</button>
+            <button class="action-btn" onclick="loadSampleMarsReel()">🎬 Load Mars Sample Reel</button>
+          </div>
+
+          <div class="jobs-table-wrapper">
+            <table class="jobs-table">
+              <thead>
+                <tr>
+                  <th>Job ID</th>
+                  <th>Status</th>
+                  <th>Stage</th>
+                  <th>Duration</th>
+                  <th>Watermark</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="jobs-table-body">
+                <tr>
+                  <td colspan="6" class="empty-state">Loading job records...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Right Column: Live Monitor & Video Hub -->
+    <section class="monitor-panel glass-card">
+      <div class="monitor-header">
+        <h3>Studio Video Player & Export Hub</h3>
+        <span class="live-pill" id="liveIndicator">Ready</span>
+      </div>
+
+      <!-- Live Video Player Container -->
+      <div class="player-container">
+        <video id="studioPlayer" controls playsinline poster="assets/watermark/reelcraft_watermark.png">
+          <source id="videoSource" src="/static/output/test_verification_01/final_reel.mp4" type="video/mp4">
+          Your browser does not support HTML5 video.
+        </video>
+
+        <!-- Simulated Watermark badge overlay on video player if in free tier -->
+        <div class="watermark-overlay" id="playerWatermarkOverlay">
+          <span>Made with ReelCraft.ai</span>
+        </div>
+      </div>
+
+      <!-- Rendering HUD Progress Box -->
+      <div class="hud-box" id="renderHud">
+        <div class="hud-header">
+          <span class="hud-title" id="hudStageTitle">System Ready</span>
+          <span class="hud-percent" id="hudPercent">100%</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="hudProgressBar" style="width: 100%;"></div>
+        </div>
+        <div class="hud-steps">
+          <span class="step-item active" id="step-1">1. Storyboard</span>
+          <span class="step-item active" id="step-2">2. Zero-Tofu Subtitles</span>
+          <span class="step-item active" id="step-3">3. B-Roll Media</span>
+          <span class="step-item active" id="step-4">4. Smart Ducking</span>
+          <span class="step-item active" id="step-5">5. WhatsApp Opt</span>
+        </div>
+      </div>
+
+      <!-- Dual Download Buttons -->
+      <div class="download-grid">
+        <a id="btnDownloadMaster" href="/static/output/test_verification_01/final_reel.mp4" download="ReelCraft_Master_1080p.mp4" class="dl-btn dl-master">
+          <div class="dl-icon">🚀</div>
+          <div class="dl-details">
+            <span class="dl-title">Download 1080p Master</span>
+            <span class="dl-sub">Full HD • Crystal Audio</span>
+          </div>
+        </a>
+
+        <a id="btnDownloadWhatsApp" href="/static/output/test_verification_01/final_reel_whatsapp.mp4" download="ReelCraft_WhatsApp_Status.mp4" class="dl-btn dl-whatsapp">
+          <div class="dl-icon">📱</div>
+          <div class="dl-details">
+            <span class="dl-title">Download for WhatsApp</span>
+            <span class="dl-sub">&lt; 15MB High-Clarity Status</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Viral Social Media Pack Accordion -->
+      <div class="social-pack-card">
+        <div class="pack-header">
+          <h4>🔥 1-Click Viral Social Media Pack</h4>
+          <span class="badge-mini">AI Optimized</span>
+        </div>
+
+        <div class="pack-item">
+          <div class="pack-item-top">
+            <label>Hook Title</label>
+            <button class="copy-btn" onclick="copyField('socialHookTitle')">📋 Copy</button>
+          </div>
+          <input type="text" id="socialHookTitle" readonly value="Mars Ke 3 Aise Rahasya Jo Scientists Ko Hairan Kar Dete Hain 🔴🚀">
+        </div>
+
+        <div class="pack-item">
+          <div class="pack-item-top">
+            <label>Description</label>
+            <button class="copy-btn" onclick="copyField('socialDescription')">📋 Copy</button>
+          </div>
+          <textarea id="socialDescription" rows="2" readonly>Kyu Mars ka ek saal dharti se dugna hota hai? Jaaniye Lal Grah ke 3 hairatangez rahasya is video me. Like aur Subscribe zaroor karein!</textarea>
+        </div>
+
+        <div class="pack-item">
+          <div class="pack-item-top">
+            <label>15 Hashtags</label>
+            <button class="copy-btn" onclick="copyField('socialTags')">📋 Copy All</button>
+          </div>
+          <input type="text" id="socialTags" readonly value="#mars #spacefacts #sciencefacts #solarsystem #reels #viralshorts #hindifacts #universe #chandrayaan #isro #nasa #astronomy #amazingfacts #knowledge #reelcraft">
+        </div>
+
+        <!-- Full Script Toggle -->
+        <details class="script-details">
+          <summary>📜 View Full Voiceover Script</summary>
+          <div class="script-content" id="fullScriptContent">
+            Mars yaani Lal Grah ke 3 hairatangez rahasya. Pehla: Mars par suryast neela dikhta hai. Doosra: Mars par hamare solar system ka sabse bada jwalamukhi Olympus Mons maujood hai. Teesra: Mars ka ek saal dharti ke 687 dinon ke barabar hota hai.
+          </div>
+        </details>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast">Action completed successfully</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

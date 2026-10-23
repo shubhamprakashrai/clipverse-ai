@@ -1,0 +1,28 @@
+﻿# Python & Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*.class
+
+# Environment Credentials & Secrets
+.env
+*.env.local
+
+# Video Rendering & Storage Caches
+storage/cache/*
+!storage/cache/.gitkeep
+storage/output/*
+!storage/output/.gitkeep
+storage/uploads/*
+!storage/uploads/.gitkeep
+*.mp4
+*.log
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
