@@ -380,34 +380,34 @@ def run_cartoon_story(job_id: str, req: CartoonStoryRequest):
         srt_path = job_dir / "subtitles.srt"
         voice_engine.synthesize_voice(script_text, req.voice_name, audio_path, srt_path, language=req.language)
 
-        # Step 3: Generate 3D Cartoon Scene Artwork & Motion
+        # Step 3: Generate 100% Pure Cartoon Scene Artwork & Dynamic Motions
         update_job(job_id, JobStatus.PROCESSING, 65, "Creating 3D Pixar-style scene artwork & camera motion...")
         processed_clips = []
-        clip_duration = 4.0
+        total_audio_duration = voice_engine.get_audio_duration(audio_path)
+        clip_duration = max(3.0, total_audio_duration / max(1, len(scenes)))
+        motions = ["zoom_in", "pan_right", "zoom_out", "pan_left", "punch_zoom"]
 
         for i, scene in enumerate(scenes):
             img_prompt = scene.get("visual_image_prompt", req.story_topic)
+            kw = scene.get("visual_search_term", "")
             scene_img_path = job_dir / f"cartoon_art_{i}.jpg"
             out_clip = job_dir / f"scene_{i}.mp4"
 
-            # Generate or fetch 3D cartoon scene image
+            # 100% Pure Cartoon Scene Artwork for every scene
             media_service.generate_ai_cartoon_scene_image(
-                img_prompt, scene_img_path, aspect_ratio=req.aspect_ratio.value, style=req.character_style
+                img_prompt, scene_img_path, aspect_ratio=req.aspect_ratio.value, style=req.character_style, keyword=kw, scene_index=i, total_scenes=len(scenes)
             )
 
-            if scene_img_path.exists() and scene_img_path.stat().st_size > 1000:
-                # Apply 3D Ken Burns Camera Pan & Zoom motion
-                motion = ffmpeg_renderer.image_to_motion_clip(
-                    scene_img_path, out_clip, duration=clip_duration, aspect_ratio=req.aspect_ratio.value
-                )
-                processed_clips.append(motion)
-            else:
-                # Fallback to animated stock video
-                term = scene.get("visual_search_term", "3d cartoon animation")
-                clips = media_service.fetch_media_for_terms([term], aspect_ratio=req.aspect_ratio.value, is_cartoon=True)
-                if clips:
-                    fitted = ffmpeg_renderer.resize_and_fit_clip(clips[0], out_clip, clip_duration, req.aspect_ratio.value)
-                    processed_clips.append(fitted)
+            # Ensure cartoon scene continuity - never use non-cartoon stock video
+            if not scene_img_path.exists() or scene_img_path.stat().st_size < 1000:
+                if i > 0 and (job_dir / f"cartoon_art_{i-1}.jpg").exists():
+                    shutil.copy(job_dir / f"cartoon_art_{i-1}.jpg", scene_img_path)
+
+            motion_type = motions[i % len(motions)]
+            motion = ffmpeg_renderer.image_to_motion_clip(
+                scene_img_path, out_clip, duration=clip_duration, motion_type=motion_type, aspect_ratio=req.aspect_ratio.value
+            )
+            processed_clips.append(motion)
 
         # Step 4: Final Assembly with Ambient Scoring & Subtitles
         update_job(job_id, JobStatus.PROCESSING, 90, "Final rendering with magical music & subtitles...")

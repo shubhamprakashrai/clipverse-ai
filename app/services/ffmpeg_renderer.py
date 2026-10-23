@@ -1,4 +1,4 @@
-import os
+﻿import os
 import subprocess
 from pathlib import Path
 from typing import List, Optional
@@ -22,6 +22,7 @@ def image_to_motion_clip(
     image_path: Path,
     output_path: Path,
     duration: float = 4.0,
+    motion_type: str = "zoom_in",
     aspect_ratio: str = "9:16"
 ) -> Path:
     """
@@ -38,12 +39,32 @@ def image_to_motion_clip(
         w, h = 1080, 1080
 
     fps = 30
-    total_frames = int(duration * fps)
+    total_frames = max(30, int(duration * fps))
 
-    # Ken burns zoom filter: zoom in smoothly from 1.0 to 1.15
+    if motion_type == "zoom_in":
+        zoom_expr = "min(pzoom+0.0035,1.25)"
+        x_expr = "iw/2-(iw/zoom/2)"
+        y_expr = "ih/2-(ih/zoom/2)"
+    elif motion_type == "zoom_out":
+        zoom_expr = "if(eq(on,1),1.25,max(1.05,pzoom-0.0035))"
+        x_expr = "iw/2-(iw/zoom/2)"
+        y_expr = "ih/2-(ih/zoom/2)"
+    elif motion_type == "pan_right":
+        zoom_expr = "1.20"
+        x_expr = f"(on/{total_frames})*(iw-iw/zoom)"
+        y_expr = "ih/2-(ih/zoom/2)"
+    elif motion_type == "pan_left":
+        zoom_expr = "1.20"
+        x_expr = f"(1-on/{total_frames})*(iw-iw/zoom)"
+        y_expr = "ih/2-(ih/zoom/2)"
+    else:
+        zoom_expr = "min(pzoom+0.0045,1.30)"
+        x_expr = "iw/2-(iw/zoom/2)"
+        y_expr = "ih/2-(ih/zoom/2)"
+
     vf = (
-        f"scale={w*2}:{h*2},"
-        f"zoompan=z='min(zoom+0.0015,1.15)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps},"
+        f"scale={w*2}:{h*2}:force_original_aspect_ratio=increase,crop={w*2}:{h*2},"
+        f"zoompan=z='{zoom_expr}':d={total_frames}:x='{x_expr}':y='{y_expr}':s={w}x{h}:fps={fps},eq=saturation=1.28:contrast=1.12:brightness=0.02,"
         f"format=yuv420p"
     )
 
@@ -240,3 +261,4 @@ def optimize_for_whatsapp(input_mp4: Path, output_mp4: Path) -> Path:
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     logger.info(f"Optimized video for WhatsApp: {output_mp4} (Size: {output_mp4.stat().st_size / 1024 / 1024:.2f} MB)")
     return output_mp4
+

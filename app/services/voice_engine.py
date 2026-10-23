@@ -1,3 +1,4 @@
+import re
 import asyncio
 import os
 import shutil
@@ -36,21 +37,20 @@ def get_optimal_voice(text: str, requested_voice: Optional[str] = None, language
 
 def get_audio_duration(audio_path: Path) -> float:
     """
-    Get duration in seconds of any audio file using ffprobe.
+    Get exact duration in seconds of any audio file using FFmpeg.
     """
     try:
-        cmd = [
-            "ffprobe", "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
-            str(audio_path)
-        ]
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-        return float(res.stdout.strip())
+        import re
+        import imageio_ffmpeg
+        ffmpeg_bin = imageio_ffmpeg.get_ffmpeg_exe()
+        res = subprocess.run([ffmpeg_bin, "-i", str(audio_path)], stderr=subprocess.PIPE, text=True)
+        m = re.search(r"Duration:\s*(\d+):(\d+):(\d+\.\d+)", res.stderr)
+        if m:
+            h, m_, s = m.groups()
+            return int(h) * 3600 + int(m_) * 60 + float(s)
     except Exception as e:
-        logger.warning(f"Failed to get audio duration with ffprobe: {e}, falling back to file estimate")
-        # Rough estimate: 16KB per sec for 128kbps MP3
-        return max(5.0, audio_path.stat().st_size / 16000.0)
+        logger.warning(f"Failed to get audio duration with ffmpeg: {e}")
+    return max(5.0, audio_path.stat().st_size / 16000.0)
 
 async def generate_speech_and_subtitles(
     text: str,

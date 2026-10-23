@@ -12,7 +12,7 @@ def _generate_with_fallback(prompt: str, config: types.GenerateContentConfig) ->
     Execute generation with instant model fallback if a model is temporarily unavailable.
     """
     client = _get_client()
-    candidate_models = [settings.GEMINI_MODEL, "gemini-3.5-flash-lite", "gemini-3.5-flash"]
+    candidate_models = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", settings.GEMINI_MODEL, "gemini-3.5-flash"]
     seen = set()
     models_to_try = [m for m in candidate_models if not (m in seen or seen.add(m))]
 
