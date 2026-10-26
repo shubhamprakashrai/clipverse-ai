@@ -24,4 +24,5 @@ class JobResponse(BaseModel):
     social_pack: Optional[Dict[str, Any]] = Field(None, description="Viral Title, Description and Hashtags")
     duration: Optional[float] = Field(None, description="Video duration in seconds")
     watermark_applied: bool = Field(True, description="Whether watermark was burned")
+    youtube_upload: Optional[Dict[str, Any]] = Field(None, description="YouTube upload response including video URL")
     error: Optional[str] = Field(None, description="Error message if job failed")

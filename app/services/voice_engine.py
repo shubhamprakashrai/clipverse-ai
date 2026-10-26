@@ -66,15 +66,25 @@ async def generate_speech_and_subtitles(
     output_audio_path.parent.mkdir(parents=True, exist_ok=True)
     resolved_voice = get_optimal_voice(text, requested_voice=voice, language=language)
 
-    communicate = edge_tts.Communicate(text, resolved_voice, rate=rate)
+    last_tts_err = None
     sub_maker = edge_tts.SubMaker()
-
-    with open(output_audio_path, "wb") as audio_file:
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_file.write(chunk["data"])
-            elif chunk["type"] in ["WordBoundary", "SentenceBoundary"]:
-                sub_maker.feed(chunk)
+    for attempt in range(1, 4):
+        try:
+            communicate = edge_tts.Communicate(text, resolved_voice, rate=rate)
+            sub_maker = edge_tts.SubMaker()
+            with open(output_audio_path, "wb") as audio_file:
+                async for chunk in communicate.stream():
+                    if chunk["type"] == "audio":
+                        audio_file.write(chunk["data"])
+                    elif chunk["type"] in ["WordBoundary", "SentenceBoundary"]:
+                        sub_maker.feed(chunk)
+            break
+        except Exception as e:
+            last_tts_err = e
+            logger.warning(f"Edge-TTS attempt {attempt}/3 failed: {e}. Retrying in 2 seconds...")
+            await asyncio.sleep(2)
+    else:
+        raise last_tts_err
 
     srt_content = sub_maker.get_srt().strip()
     if not srt_content:

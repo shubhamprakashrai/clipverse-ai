@@ -1,9 +1,18 @@
 ﻿import os
 import json
 import pickle
+import socket
 from pathlib import Path
 from typing import Optional, Dict, Any
 from loguru import logger
+
+# Force IPv4 socket resolution to prevent Windows IPv6 timeouts on googleapis.com
+_orig_getaddrinfo = socket.getaddrinfo
+def _ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if family == 0 or family == socket.AF_UNSPEC:
+        family = socket.AF_INET
+    return _orig_getaddrinfo(host, port, family, type, proto, flags)
+socket.getaddrinfo = _ipv4_getaddrinfo
 
 TOKEN_FILE = Path("D:/ReelCraft-AI/storage/youtube_token.pickle")
 CLIENT_SECRETS_FILE = Path("D:/ReelCraft-AI/storage/client_secrets.json")
@@ -23,20 +32,15 @@ def get_youtube_auth_status() -> Dict[str, Any]:
                 creds = pickle.load(f)
             if creds and (creds.valid or creds.refresh_token):
                 channel_name = "Connected Account"
-                # Quick non-blocking attempt to get official channel title
                 try:
-                    import socket
-                    orig_timeout = socket.getdefaulttimeout()
-                    socket.setdefaulttimeout(4)
                     from googleapiclient.discovery import build
                     yt = build("youtube", "v3", credentials=creds)
                     resp = yt.channels().list(mine=True, part="snippet").execute()
                     items = resp.get("items", [])
                     if items:
                         channel_name = items[0]["snippet"]["title"]
-                    socket.setdefaulttimeout(orig_timeout)
                 except Exception as net_e:
-                    logger.debug(f"Quick channel name fetch skipped: {net_e}")
+                    logger.debug(f"Channel name fetch notice: {net_e}")
         except Exception as e:
             logger.warning(f"Failed to query YouTube channel: {e}")
 
@@ -85,10 +89,11 @@ def upload_video_to_youtube(
     description: str,
     tags: Optional[list] = None,
     privacy_status: str = "unlisted",
-    category_id: str = "27"
+    category_id: str = "27",
+    thumbnail_path: Optional[Path] = None
 ) -> Dict[str, Any]:
     """
-    Upload a rendered documentary video to YouTube via YouTube Data API v3.
+    Upload a rendered documentary video to YouTube via YouTube Data API v3 with optional thumbnail.
     """
     if not video_path.exists():
         raise FileNotFoundError(f"Video file not found: {video_path}")
@@ -117,7 +122,8 @@ def upload_video_to_youtube(
         }
     }
 
-    media = MediaFileUpload(str(video_path), mimetype="video/mp4", resumable=True)
+    # 10MB chunk for fast resumable upload
+    media = MediaFileUpload(str(video_path), mimetype="video/mp4", chunksize=10*1024*1024, resumable=True)
 
     logger.info(f"Starting YouTube upload for: '{title[:40]}' ({video_path.stat().st_size / (1024*1024):.1f} MB)")
     request = youtube.videos().insert(
@@ -135,6 +141,19 @@ def upload_video_to_youtube(
     video_id = response.get("id")
     video_url = f"https://youtu.be/{video_id}"
     logger.info(f"YouTube upload complete! Video URL: {video_url}")
+
+    # Set custom thumbnail if provided
+    if thumbnail_path and thumbnail_path.exists():
+        try:
+            logger.info(f"Setting custom YouTube thumbnail from: {thumbnail_path.name}")
+            thumb_media = MediaFileUpload(str(thumbnail_path), mimetype="image/jpeg")
+            youtube.thumbnails().set(
+                videoId=video_id,
+                media_body=thumb_media
+            ).execute()
+            logger.info("Custom YouTube thumbnail set successfully!")
+        except Exception as th_err:
+            logger.warning(f"Failed to set custom thumbnail (channel might need phone verification): {th_err}")
 
     return {
         "success": True,

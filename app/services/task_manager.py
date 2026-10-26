@@ -472,6 +472,14 @@ def run_documentary_video(job_id: str, req: DocumentaryRequest):
             language=req.language
         )
         script_text = storyboard.get("full_script", "")
+        outro_cta = (
+            " Agar aapko yeh deep investigative documentary pasand aayi, toh video ko LIKE zaroor karein "
+            "aur comment box me apna vichar share karein. Bharat ki aisi hi aitihasik aur geopolitical sachi "
+            "kahaniyon ko dekhne ke liye channel ko SUBSCRIBE karna bilkul na bhulein. Jai Hind, Vande Mataram!"
+        )
+        if "SUBSCRIBE" not in script_text.upper():
+            script_text += outro_cta
+
         scenes = storyboard.get("scenes", [])
         chapters = storyboard.get("chapters", [])
         social_pack = storyboard.get("social_pack", {})
@@ -561,12 +569,19 @@ def run_documentary_video(job_id: str, req: DocumentaryRequest):
         if req.auto_upload_youtube:
             update_job(job_id, JobStatus.PROCESSING, 95, "Auto-publishing video to YouTube Channel...")
             try:
+                thumb_file = job_dir / "thumbnail.jpg"
+                if not thumb_file.exists():
+                    fallback_thumb = settings.STORAGE_DIR / "arunachal_viral_thumbnail.jpg"
+                    if fallback_thumb.exists():
+                        thumb_file = fallback_thumb
+
                 yt_result = youtube_uploader.upload_video_to_youtube(
                     video_path=final_mp4,
                     title=social_pack.get("title", req.topic),
                     description=social_pack.get("description", script_text[:500]),
                     tags=social_pack.get("hashtags", []),
-                    privacy_status=req.youtube_privacy
+                    privacy_status=req.youtube_privacy,
+                    thumbnail_path=thumb_file if thumb_file.exists() else None
                 )
             except Exception as yt_err:
                 logger.warning(f"YouTube auto-upload skipped: {yt_err}")

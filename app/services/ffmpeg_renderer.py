@@ -218,8 +218,10 @@ def assemble_final_video(
         final_audio_label = "1:a"
 
     if filter_parts:
+        clean_v_label = "0:v" if final_video_label == "[0:v]" else final_video_label
+        clean_a_label = "1:a" if final_audio_label == "[1:a]" else final_audio_label
         cmd.extend(["-filter_complex", ";".join(filter_parts)])
-        cmd.extend(["-map", final_video_label, "-map", final_audio_label])
+        cmd.extend(["-map", clean_v_label, "-map", clean_a_label])
     else:
         cmd.extend(["-map", "0:v", "-map", "1:a"])
 

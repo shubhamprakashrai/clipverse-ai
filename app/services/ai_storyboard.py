@@ -403,12 +403,18 @@ Return ONLY valid JSON.
     raw = _generate_with_fallback(prompt, config)
     try:
         data = json.loads(raw)
-    except json.JSONDecodeError:
-        cleaned = raw.strip()
-        if cleaned.startswith("```json"):
-            cleaned = cleaned[7:]
-        if cleaned.endswith("```"):
-            cleaned = cleaned[:-3]
-        data = json.loads(cleaned)
+    except Exception:
+        try:
+            import json_repair
+            data = json_repair.repair_json(raw, return_objects=True)
+            logger.info("Successfully recovered JSON using json_repair")
+        except Exception as err:
+            logger.warning(f"json_repair fallback failed: {err}")
+            cleaned = raw.strip()
+            if cleaned.startswith("```json"):
+                cleaned = cleaned[7:]
+            if cleaned.endswith("```"):
+                cleaned = cleaned[:-3]
+            data = json.loads(cleaned)
 
     return data
