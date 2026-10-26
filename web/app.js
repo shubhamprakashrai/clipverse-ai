@@ -439,6 +439,34 @@ function onJobCompleted(job) {
   if (job.script) {
     document.getElementById('fullScriptContent').textContent = job.script;
   }
+
+  // Update YouTube Action Banner
+  state.currentJob = job;
+  const ytBanner = document.getElementById('yt-result-banner');
+  const ytTitle = document.getElementById('yt-banner-title');
+  const ytSub = document.getElementById('yt-banner-sub');
+  const ytWatch = document.getElementById('btnYtWatch');
+  const ytUploadBtn = document.getElementById('btnManualYtUpload');
+
+  if (ytBanner) ytBanner.style.display = 'flex';
+  if (job.youtube_upload && job.youtube_upload.success && job.youtube_upload.video_url) {
+    if (ytTitle) ytTitle.textContent = 'Uploaded to YouTube!';
+    if (ytSub) ytSub.textContent = `Video published as: ${job.youtube_upload.privacy || 'unlisted'}`;
+    if (ytWatch) {
+      ytWatch.href = job.youtube_upload.video_url;
+      ytWatch.style.display = 'inline-block';
+    }
+    if (ytUploadBtn) ytUploadBtn.style.display = 'none';
+  } else {
+    if (ytTitle) ytTitle.textContent = 'YouTube Publishing';
+    if (ytSub) ytSub.textContent = 'Publish this 1080p documentary to your connected channel';
+    if (ytWatch) ytWatch.style.display = 'none';
+    if (ytUploadBtn) {
+      ytUploadBtn.style.display = 'inline-block';
+      ytUploadBtn.textContent = '🚀 Upload to YouTube';
+      ytUploadBtn.disabled = false;
+    }
+  }
 }
 
 function updateStepper(progress) {
@@ -556,6 +584,42 @@ function loadSampleMarsReel() {
     const checkYtBtn = document.getElementById('btn-check-yt');
     if (checkYtBtn) {
       checkYtBtn.addEventListener('click', checkYouTubeStatus);
+    }
+
+    const manualYtBtn = document.getElementById('btnManualYtUpload');
+    if (manualYtBtn) {
+      manualYtBtn.addEventListener('click', async () => {
+        if (!state.currentJob || !state.currentJob.job_id) {
+          showToast('⚠️ No video job selected');
+          return;
+        }
+        manualYtBtn.textContent = 'Uploading to YouTube...';
+        manualYtBtn.disabled = true;
+        try {
+          const priv = document.getElementById('doc-yt-privacy') ? document.getElementById('doc-yt-privacy').value : 'unlisted';
+          const res = await fetch(`/api/v1/youtube/upload?job_id=${state.currentJob.job_id}&privacy=${priv}`, { method: 'POST' });
+          const data = await res.json();
+          if (data.success && data.video_url) {
+            showToast('🎉 Video successfully published to YouTube!');
+            const ytWatch = document.getElementById('btnYtWatch');
+            if (ytWatch) {
+              ytWatch.href = data.video_url;
+              ytWatch.style.display = 'inline-block';
+            }
+            const ytTitle = document.getElementById('yt-banner-title');
+            if (ytTitle) ytTitle.textContent = 'Uploaded to YouTube!';
+            manualYtBtn.style.display = 'none';
+          } else {
+            showToast('❌ ' + (data.message || 'Upload failed. Check YouTube authentication.'));
+            manualYtBtn.textContent = '🚀 Upload to YouTube';
+            manualYtBtn.disabled = false;
+          }
+        } catch (e) {
+          showToast('❌ Upload request failed: ' + e.message);
+          manualYtBtn.textContent = '🚀 Upload to YouTube';
+          manualYtBtn.disabled = false;
+        }
+      });
     }
 
     async function checkYouTubeStatus() {
