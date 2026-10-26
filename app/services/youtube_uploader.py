@@ -21,24 +21,35 @@ def get_youtube_auth_status() -> Dict[str, Any]:
         try:
             with open(TOKEN_FILE, "rb") as f:
                 creds = pickle.load(f)
-            if creds and creds.valid:
-                from googleapiclient.discovery import build
-                yt = build("youtube", "v3", credentials=creds)
-                resp = yt.channels().list(mine=True, part="snippet").execute()
-                items = resp.get("items", [])
-                if items:
-                    channel_name = items[0]["snippet"]["title"]
+            if creds and (creds.valid or creds.refresh_token):
+                channel_name = "Connected Account"
+                # Quick non-blocking attempt to get official channel title
+                try:
+                    import socket
+                    orig_timeout = socket.getdefaulttimeout()
+                    socket.setdefaulttimeout(4)
+                    from googleapiclient.discovery import build
+                    yt = build("youtube", "v3", credentials=creds)
+                    resp = yt.channels().list(mine=True, part="snippet").execute()
+                    items = resp.get("items", [])
+                    if items:
+                        channel_name = items[0]["snippet"]["title"]
+                    socket.setdefaulttimeout(orig_timeout)
+                except Exception as net_e:
+                    logger.debug(f"Quick channel name fetch skipped: {net_e}")
         except Exception as e:
             logger.warning(f"Failed to query YouTube channel: {e}")
 
+    is_authenticated = has_token and (channel_name is not None)
+
     return {
         "configured": has_secrets,
-        "authenticated": has_token and channel_name is not None,
+        "authenticated": is_authenticated,
         "channel_name": channel_name,
         "client_secrets_path": str(CLIENT_SECRETS_FILE),
         "instructions": (
-            "1. Create a free OAuth 2.0 Client ID in Google Cloud Console.\\n"
-            "2. Download client_secrets.json and save to D:\\ReelCraft-AI\\storage\\client_secrets.json\\n"
+            "1. Create a free OAuth 2.0 Client ID in Google Cloud Console.\n"
+            "2. Download client_secrets.json and save to D:\\ReelCraft-AI\\storage\\client_secrets.json\n"
             "3. Run authentication to link your YouTube Channel."
         )
     }
