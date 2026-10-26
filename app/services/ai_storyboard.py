@@ -305,3 +305,110 @@ Return ONLY valid JSON."""
     data = json.loads(raw)
     data["social_pack"] = generate_social_pack(product_name, data.get("full_script", ""), language)
     return data
+
+
+def generate_documentary_storyboard(
+    topic: str,
+    duration_mode: str = "5min",
+    theme: str = "investigative",
+    language: str = "hi"
+) -> dict:
+    """
+    Generate cinematic 5 to 10 minute multi-chapter documentary screenplay,
+    complete with chapter timestamps, newspaper clipping headlines, archival B-roll cues, and YouTube SEO pack.
+    """
+    if duration_mode == "10min":
+        scene_count = "28 to 35"
+        word_target = "1300 to 1500"
+        length_desc = "10-minute deep investigative mega-documentary"
+    elif duration_mode == "8min":
+        scene_count = "22 to 26"
+        word_target = "1000 to 1200"
+        length_desc = "8-minute comprehensive documentary explainer"
+    else: # 5min default
+        scene_count = "16 to 20"
+        word_target = "650 to 800"
+        length_desc = "5-minute fast-paced cinematic documentary"
+
+    lang_desc = (
+        "in deep, serious, authoritative Hindi documentary tone (jaise Johnny Harris, Vox, ya Dhruv Rathee ke deep-dive explainers hote hain)"
+        if language == "hi"
+        else "in deep, authoritative, gripping English investigative documentary tone (like BBC, Vox, or Frontline)"
+    )
+
+    theme_vibe = {
+        "investigative": "Dark corporate greed, secret financial loops, dramatic revelations, investigative exposes",
+        "historical": "Epic historical grandeur, forgotten wars, ancient empires, lost civilizations, monumental battles",
+        "geopolitical": "Global power struggles, espionage, diplomacy, border tensions, intelligence dossiers",
+        "tech_business": "Silicon Valley power battles, startup scandals, algorithmic monopolies, billion-dollar gambles",
+        "mystery": "Unexplained scientific anomalies, cosmic paradoxes, deep-sea exploration, forbidden discoveries"
+    }.get(theme, "Serious investigative journalism")
+
+    prompt = f"""You are an award-winning documentary director and investigative journalist (like Vox, MagnatesMedia, and National Geographic).
+Create a {length_desc} {lang_desc} based on the topic: "{topic}".
+
+Theme & Mood: {theme_vibe}.
+
+Output MUST be strictly valid JSON with this exact structure:
+{{
+  "title": "Gripping, high-CTR YouTube Documentary Title",
+  "chapters": [
+    {{"timestamp": "00:00", "title": "The Hook"}},
+    {{"timestamp": "01:05", "title": "The Hidden Roots"}},
+    {{"timestamp": "02:15", "title": "The Escalation"}},
+    {{"timestamp": "03:30", "title": "The Fatal Mistake"}},
+    {{"timestamp": "04:30", "title": "The Dark Truth"}}
+  ],
+  "full_script": "Complete uninterrupted spoken voiceover narration ({word_target} words). Gripping narrative flow, no sound cues or markdown symbols in this text.",
+  "scenes": [
+    {{
+      "scene_number": 1,
+      "chapter": "The Hook",
+      "scene_type": "newspaper_headline",
+      "headline_text": "DRAMATIC NEWSPAPER HEADLINE TEXT IN ALL CAPS",
+      "visual_search_terms": ["stock market panic", "wall street traders"],
+      "ken_burns": "slow_zoom_in",
+      "narration_part": "Narration sentence corresponding to this visual"
+    }},
+    {{
+      "scene_number": 2,
+      "chapter": "The Hook",
+      "scene_type": "stock_footage",
+      "headline_text": null,
+      "visual_search_terms": ["dark boardroom meeting", "documents shredding"],
+      "ken_burns": "slow_pan_right",
+      "narration_part": "Next narration sentence"
+    }}
+  ],
+  "social_pack": {{
+    "title": "YouTube High-CTR Title",
+    "description": "Full YouTube SEO description with summary, chapter timestamps, and call to action",
+    "hashtags": ["#documentary", "#investigation", "#history", "#exposed", "#viral"]
+  }}
+}}
+
+Important Requirements:
+1. Provide between {scene_count} distinct scenes.
+2. Intersperse 3 to 5 scenes with scene_type="newspaper_headline" for dramatic news clipping reveals.
+3. Every scene MUST have 2 clean, simple English visual search keywords for high-definition stock footage (e.g. 'old factory smoke', 'courtroom judge gavel', 'money counting machine').
+4. The script must be high-retention with dramatic pacing.
+Return ONLY valid JSON.
+"""
+
+    config = types.GenerateContentConfig(
+        response_mime_type="application/json",
+        temperature=0.75
+    )
+
+    raw = _generate_with_fallback(prompt, config)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        cleaned = raw.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        data = json.loads(cleaned)
+
+    return data

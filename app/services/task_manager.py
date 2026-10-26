@@ -10,7 +10,8 @@ from app.models.request import (
     PersonalReelRequest,
     ProductAdRequest,
     DigitalInvitationRequest,
-    CartoonStoryRequest
+    CartoonStoryRequest,
+    DocumentaryRequest
 )
 from app.models.response import JobResponse, JobStatus
 from app.services import ai_storyboard, voice_engine, media_service, ffmpeg_renderer
@@ -82,10 +83,11 @@ def run_text_to_video(job_id: str, req: TextToVideoRequest):
         bgm_files = list(settings.BGM_DIR.glob("*.mp3"))
         bgm_path = bgm_files[0] if (req.include_bgm and bgm_files) else None
 
+        sub_to_burn = srt_path if getattr(req, "subtitles_enabled", False) else None
         ffmpeg_renderer.assemble_final_video(
             clips=processed_clips,
             audio_path=audio_path,
-            subtitle_path=srt_path,
+            subtitle_path=sub_to_burn,
             output_path=final_mp4,
             bgm_path=bgm_path,
             watermark_enabled=req.watermark_enabled,
@@ -153,10 +155,11 @@ def run_personal_reel(job_id: str, req: PersonalReelRequest):
         bgm_files = list(settings.BGM_DIR.glob("*.mp3"))
         bgm_path = bgm_files[0] if (req.include_bgm and bgm_files) else None
 
+        sub_to_burn = srt_path if getattr(req, "subtitles_enabled", False) else None
         ffmpeg_renderer.assemble_final_video(
             clips=processed_clips,
             audio_path=audio_path,
-            subtitle_path=srt_path,
+            subtitle_path=sub_to_burn,
             output_path=final_mp4,
             bgm_path=bgm_path,
             watermark_enabled=req.watermark_enabled,
@@ -248,10 +251,11 @@ def run_product_ad(job_id: str, req: ProductAdRequest):
         bgm_files = list(settings.BGM_DIR.glob("*.mp3"))
         bgm_path = bgm_files[0] if bgm_files else None
 
+        sub_to_burn = srt_path if getattr(req, "subtitles_enabled", False) else None
         ffmpeg_renderer.assemble_final_video(
             clips=processed_clips,
             audio_path=audio_path,
-            subtitle_path=srt_path,
+            subtitle_path=sub_to_burn,
             output_path=final_mp4,
             bgm_path=bgm_path,
             logo_path=logo_file,
@@ -326,10 +330,11 @@ def run_digital_invitation(job_id: str, req: DigitalInvitationRequest):
         bgm_files = list(settings.BGM_DIR.glob("*.mp3"))
         bgm_path = bgm_files[0] if bgm_files else None
 
+        sub_to_burn = srt_path if getattr(req, "subtitles_enabled", False) else None
         ffmpeg_renderer.assemble_final_video(
             clips=processed_clips,
             audio_path=audio_path,
-            subtitle_path=srt_path,
+            subtitle_path=sub_to_burn,
             output_path=final_mp4,
             bgm_path=bgm_path,
             watermark_enabled=req.watermark_enabled,
@@ -415,10 +420,11 @@ def run_cartoon_story(job_id: str, req: CartoonStoryRequest):
         bgm_files = list(settings.BGM_DIR.glob("*.mp3"))
         bgm_path = bgm_files[0] if bgm_files else None
 
+        sub_to_burn = srt_path if getattr(req, "subtitles_enabled", False) else None
         ffmpeg_renderer.assemble_final_video(
             clips=processed_clips,
             audio_path=audio_path,
-            subtitle_path=srt_path,
+            subtitle_path=sub_to_burn,
             output_path=final_mp4,
             bgm_path=bgm_path,
             watermark_enabled=req.watermark_enabled,
@@ -444,4 +450,142 @@ def run_cartoon_story(job_id: str, req: CartoonStoryRequest):
 
     except Exception as e:
         logger.error(f"[{job_id}] Cartoon story task failed: {e}")
+        update_job(job_id, JobStatus.FAILED, 0, "Failed", error=str(e))
+
+
+def run_documentary_video(job_id: str, req: DocumentaryRequest):
+    """
+    Mode 6: Long-Form Cinematic Documentary & News Explainer (5 to 10 Minutes).
+    Vox, MagnatesMedia & Johnny Harris high-retention investigative style.
+    """
+    from app.services import youtube_uploader
+    job_dir = settings.OUTPUT_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        # Step 1: Deep Documentary Storyboard with Multi-Chapter Screenplay
+        update_job(job_id, JobStatus.PROCESSING, 15, "AI researching historical archives & drafting 5-chapter screenplay...")
+        storyboard = ai_storyboard.generate_documentary_storyboard(
+            req.topic,
+            duration_mode=req.duration_mode.value,
+            theme=req.theme.value,
+            language=req.language
+        )
+        script_text = storyboard.get("full_script", "")
+        scenes = storyboard.get("scenes", [])
+        chapters = storyboard.get("chapters", [])
+        social_pack = storyboard.get("social_pack", {})
+
+        # Step 2: Authoritative Investigative Voiceover
+        update_job(job_id, JobStatus.PROCESSING, 35, "Generating deep investigative narration & syncing subtitles...")
+        audio_path = job_dir / "voiceover.mp3"
+        srt_path = job_dir / "subtitles.srt"
+        resolved_voice = req.voice_name or ("hi-IN-MadhurNeural" if req.language == "hi" else "en-US-ChristopherNeural")
+        voice_engine.synthesize_voice(script_text, resolved_voice, audio_path, srt_path, language=req.language)
+
+        # Step 3: Media Harvesting (Newspaper Clippings, Archival Stock & 4K B-Roll)
+        update_job(job_id, JobStatus.PROCESSING, 65, "Rendering newspaper clipping headlines & assembling archival B-roll...")
+        processed_clips = []
+        total_audio_duration = voice_engine.get_audio_duration(audio_path)
+        clip_duration = max(4.0, total_audio_duration / max(1, len(scenes)))
+        aspect = req.aspect_ratio.value
+
+        for i, scene in enumerate(scenes):
+            out_clip = job_dir / f"scene_{i}.mp4"
+            stype = scene.get("scene_type", "stock_footage")
+            headline = scene.get("headline_text")
+            search_terms = scene.get("visual_search_terms", [req.topic])
+
+            # A. Dynamic Newspaper Headline Card
+            if stype == "newspaper_headline" and headline and req.include_newspaper_clippings:
+                card_img = job_dir / f"headline_{i}.jpg"
+                media_service.generate_newspaper_headline_card(headline, card_img, aspect_ratio=aspect)
+                motion = ffmpeg_renderer.image_to_motion_clip(
+                    card_img, out_clip, duration=clip_duration, motion_type="zoom_in", aspect_ratio=aspect
+                )
+                processed_clips.append(motion)
+                continue
+
+            # B. Stock Footage (Pixabay Videos)
+            clips = media_service.fetch_media_for_terms(search_terms, aspect_ratio=aspect)
+            if clips:
+                fitted = ffmpeg_renderer.resize_and_fit_clip(clips[0], out_clip, clip_duration, aspect_ratio=aspect)
+                processed_clips.append(fitted)
+                continue
+
+            # C. High-Res Image Fallback with Cinematic Ken Burns Pan
+            img_hits = []
+            for t in search_terms:
+                img_hits = media_service.search_pixabay_images(t, orientation="horizontal" if aspect == "16:9" else "vertical", per_page=3)
+                if img_hits:
+                    break
+
+            if img_hits:
+                u = img_hits[0].get("largeImageURL") or img_hits[0].get("previewURL")
+                img_path = media_service.download_file(u, job_dir, suffix=".jpg")
+                motion_type = "pan_right" if i % 2 == 0 else "zoom_in"
+                motion = ffmpeg_renderer.image_to_motion_clip(img_path, out_clip, duration=clip_duration, motion_type=motion_type, aspect_ratio=aspect)
+                processed_clips.append(motion)
+            else:
+                # Fallback to generated newspaper headline or generic dramatic card
+                card_img = job_dir / f"dossier_{i}.jpg"
+                media_service.generate_newspaper_headline_card(
+                    f"EVIDENCE REPORT: {search_terms[0].upper()}", card_img, aspect_ratio=aspect
+                )
+                motion = ffmpeg_renderer.image_to_motion_clip(card_img, out_clip, duration=clip_duration, motion_type="zoom_in", aspect_ratio=aspect)
+                processed_clips.append(motion)
+
+        # Step 4: Final Cinematic Montage & Tension BGM Mixing
+        update_job(job_id, JobStatus.PROCESSING, 85, "Mastering documentary scoring, letterbox grade & subtitles...")
+        final_mp4 = job_dir / "final_reel.mp4"
+        bgm_files = list(settings.BGM_DIR.glob("*.mp3"))
+        bgm_path = bgm_files[0] if bgm_files else None
+
+        sub_to_burn = srt_path if getattr(req, "subtitles_enabled", False) else None
+        ffmpeg_renderer.assemble_final_video(
+            clips=processed_clips,
+            audio_path=audio_path,
+            subtitle_path=sub_to_burn,
+            output_path=final_mp4,
+            bgm_path=bgm_path,
+            watermark_enabled=req.watermark_enabled,
+            aspect_ratio=aspect
+        )
+
+        whatsapp_mp4 = job_dir / "final_reel_whatsapp.mp4"
+        ffmpeg_renderer.optimize_for_whatsapp(final_mp4, whatsapp_mp4)
+        duration = voice_engine.get_audio_duration(audio_path)
+
+        # Step 5: Optional YouTube Auto-Publish
+        yt_result = None
+        if req.auto_upload_youtube:
+            update_job(job_id, JobStatus.PROCESSING, 95, "Auto-publishing video to YouTube Channel...")
+            try:
+                yt_result = youtube_uploader.upload_video_to_youtube(
+                    video_path=final_mp4,
+                    title=social_pack.get("title", req.topic),
+                    description=social_pack.get("description", script_text[:500]),
+                    tags=social_pack.get("hashtags", []),
+                    privacy_status=req.youtube_privacy
+                )
+            except Exception as yt_err:
+                logger.warning(f"YouTube auto-upload skipped: {yt_err}")
+
+        update_job(
+            job_id,
+            JobStatus.COMPLETED,
+            100,
+            "Documentary completed!",
+            video_url=f"/static/output/{job_id}/final_reel.mp4",
+            whatsapp_video_url=f"/static/output/{job_id}/final_reel_whatsapp.mp4",
+            script=script_text,
+            social_pack=social_pack,
+            duration=duration,
+            watermark_applied=req.watermark_enabled,
+            youtube_upload=yt_result
+        )
+        logger.info(f"[{job_id}] Documentary task completed successfully ({duration:.1f}s)")
+
+    except Exception as e:
+        logger.error(f"[{job_id}] Documentary task failed: {e}")
         update_job(job_id, JobStatus.FAILED, 0, "Failed", error=str(e))

@@ -12,6 +12,9 @@ class VideoDurationMode(str, Enum):
     REEL_60S = "60s"            # Standard 60-sec story
     LONG_3MIN = "3min"          # 3-minute YouTube long story
     LONG_4MIN = "4min"          # 4-minute YouTube episode
+    LONG_5MIN = "5min"          # 5-minute Full Documentary
+    LONG_8MIN = "8min"          # 8-minute Deep-Dive Explainer
+    LONG_10MIN = "10min"        # 10-minute Mega Documentary
 
 class CreationMode(str, Enum):
     TEXT_TO_VIDEO = "text_to_video"
@@ -19,13 +22,15 @@ class CreationMode(str, Enum):
     PRODUCT_AD = "product_ad"
     DIGITAL_INVITATION = "digital_invitation"
     CARTOON_STORY = "cartoon_story"
+    DOCUMENTARY = "documentary"
 
 class TextToVideoRequest(BaseModel):
     topic: str = Field(..., description="Topic or prompt for the video", example="3 Incredible facts about Mars")
     language: str = Field("hi", description="Script language: 'hi' (Hindi/Hinglish) or 'en' (English)", example="hi")
     aspect_ratio: VideoAspect = Field(VideoAspect.PORTRAIT_9_16, description="Video aspect ratio")
     voice_name: Optional[str] = Field(None, description="Optional TTS Voice. If None, auto-detected from language")
-    duration_mode: VideoDurationMode = Field(VideoDurationMode.REEL_30S, description="Target video duration")
+    duration_mode: VideoDurationMode = Field(VideoDurationMode.REEL_30S, description="Target video duration"),
+    subtitles_enabled: bool = Field(False, description="Burn subtitles into video (Off by default)")
     watermark_enabled: bool = Field(True, description="False for paid subscribers (removes watermark)")
     custom_audio_path: Optional[str] = Field(None, description="Optional user voice note or MP3 file to bypass TTS")
     generate_social_pack: bool = Field(True, description="Generate viral title, description and 15 hashtags")
@@ -78,5 +83,28 @@ class CartoonStoryRequest(BaseModel):
     aspect_ratio: VideoAspect = Field(VideoAspect.PORTRAIT_9_16, description="Video aspect ratio (9:16 for Reels, 16:9 for YouTube)")
     voice_name: Optional[str] = Field(None, description="Voice: auto-detected or specific character voice")
     watermark_enabled: bool = Field(True, description="False for paid subscribers")
+    subtitles_enabled: bool = Field(False, description="Burn subtitles into video (Off by default)"),
     include_sfx: bool = Field(True, description="Include ambient sound effects and dramatic scoring")
     generate_social_pack: bool = Field(True, description="Generate viral title, description and 15 hashtags")
+
+
+class DocumentaryTheme(str, Enum):
+    INVESTIGATIVE = "investigative"   # Financial scams, crime exposés, dark secrets
+    HISTORICAL = "historical"         # Ancient empires, wars, historical breakthroughs
+    GEOPOLITICAL = "geopolitical"     # Global conflicts, diplomacy, world news
+    TECH_BUSINESS = "tech_business"   # Silicon valley titans, AI revolution, corporate wars
+    MYSTERY = "mystery"               # Unexplained phenomena, cosmic mysteries, deep sea
+
+class DocumentaryRequest(BaseModel):
+    topic: str = Field(..., description="Documentary or News Explainer topic", example="1992 Harshad Mehta Scam: The Untold Loophole")
+    theme: DocumentaryTheme = Field(DocumentaryTheme.INVESTIGATIVE, description="Narrative mood & documentary tone")
+    duration_mode: VideoDurationMode = Field(VideoDurationMode.LONG_5MIN, description="Target duration: 5min, 8min, or 10min")
+    language: str = Field("hi", description="Language: 'hi' (Hindi/Hinglish) or 'en' (English)")
+    aspect_ratio: VideoAspect = Field(VideoAspect.LANDSCAPE_16_9, description="Aspect ratio (Default 16:9 for YouTube)")
+    voice_name: Optional[str] = Field("hi-IN-MadhurNeural", description="Deep authoritative narrator voice")
+    subtitles_enabled: bool = Field(False, description="Burn subtitles into video (Off by default)"),
+    include_newspaper_clippings: bool = Field(True, description="Generate dramatic newspaper headline clipping visuals")
+    auto_upload_youtube: bool = Field(False, description="Whether to auto-upload to YouTube once rendered")
+    youtube_privacy: str = Field("unlisted", description="YouTube upload privacy: public, unlisted, private")
+    watermark_enabled: bool = Field(False, description="False for clean professional export")
+    generate_social_pack: bool = Field(True, description="Generate YouTube chapters, SEO description, and 15+ tags")

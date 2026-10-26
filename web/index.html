@@ -62,7 +62,11 @@
     <section class="creation-panel glass-card">
       <!-- Mode Tabs Navigation -->
       <nav class="mode-nav" role="tablist">
-        <button class="mode-tab active" data-mode="text_to_video" id="tab-text-to-video">
+          <button class="mode-tab active" data-mode="documentary" id="tab-documentary">
+            <span class="tab-icon">🎙️</span>
+            <span class="tab-text">5-Min Documentary</span>
+          </button>
+        <button class="mode-tab" data-mode="text_to_video" id="tab-text-to-video">
           <span class="tab-icon">ðŸŽ¬</span>
           <span class="tab-text">Text to Reel</span>
         </button>
@@ -91,8 +95,134 @@
       <!-- Dynamic Form Area -->
       <div class="form-container">
         
+                <!-- Mode 6: Cinematic Documentary & News Explainer (5-10 Min) -->
+        <form id="form-documentary" class="mode-form active">
+          <div class="form-header">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>Cinematic Documentary & News Explainer (5-10 Min)</h3>
+              <span class="badge" style="background: rgba(0, 242, 254, 0.2); color: #00f2fe; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; border: 1px solid rgba(0,242,254,0.4);">
+                📺 Vox & Magnates Style
+              </span>
+            </div>
+            <p>Generate high-retention long-form documentaries (5 to 10 min) with multi-chapter screenplays, newspaper clippings, archival footage, deep baritone voiceover, and optional YouTube auto-upload.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="doc-topic">Documentary Topic or Investigation Subject</label>
+            <textarea id="doc-topic" rows="3" placeholder="e.g. 1992 Harshad Mehta Scam: The Untold Banking Loophole that shook India..." required>1992 Harshad Mehta Scam: The Untold Banking Loophole that shook India and crashed Dalal Street</textarea>
+            
+            <div class="prompt-chips">
+              <span class="chip" onclick="setPromptText('doc-topic', '1992 Harshad Mehta Scam: The Untold Banking Loophole that crashed Dalal Street')">💼 Harshad Mehta Scam</span>
+              <span class="chip" onclick="setPromptText('doc-topic', 'The Fall of the Roman Empire: What History Books Won\'t Tell You')">🏛️ Fall of Roman Empire</span>
+              <span class="chip" onclick="setPromptText('doc-topic', 'The Cold War Secret Space Race: Lost Cosmonauts & Declassified Missions')">🚀 Cold War Space Race</span>
+              <span class="chip" onclick="setPromptText('doc-topic', 'The Rise and $74 Billion Collapse of Enron: The Greatest Accounting Fraud')">📉 Enron Collapse</span>
+              <span class="chip" onclick="setPromptText('doc-topic', 'Artificial Superintelligence: Will Humanity Survive Its Final Invention?')">🤖 AI Superintelligence</span>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="form-group">
+              <label for="doc-theme">Narrative Theme & Tone</label>
+              <select id="doc-theme">
+                <option value="investigative" selected>Investigative Expose (Financial & Crime)</option>
+                <option value="historical">Epic Historical Saga (Wars & Empires)</option>
+                <option value="geopolitical">Geopolitical World Dossier (Conflicts & Espionage)</option>
+                <option value="tech_business">Tech & Business Titans (Corporate Battles)</option>
+                <option value="mystery">Unexplained Mysteries (Cosmic & Deep Sea)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="doc-duration">Target Duration</label>
+              <select id="doc-duration">
+                <option value="5min" selected>5 Minutes (Standard YouTube Explainer)</option>
+                <option value="8min">8 Minutes (Deep-Dive Chapter Breakdown)</option>
+                <option value="10min">10 Minutes (Mega Feature Documentary)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="doc-aspect">Aspect Ratio</label>
+              <select id="doc-aspect">
+                <option value="16:9" selected>16:9 (YouTube Widescreen 1080p Master)</option>
+                <option value="9:16">9:16 (Vertical Shorts/Reels Mini-Doc)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="doc-language">Narrative Language</label>
+              <select id="doc-language">
+                <option value="hi" selected>Hindi / Hinglish (Dhruv Rathee & Nitish Rajput Style)</option>
+                <option value="en">English (Johnny Harris & Vox Style)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="doc-voice">Investigative Narrator Voice</label>
+              <select id="doc-voice">
+                <option value="hi-IN-MadhurNeural" selected>Madhur (Deep Authoritative Hindi Baritone)</option>
+                <option value="hi-IN-SwaraNeural">Swara (Serious Investigative Hindi Female)</option>
+                <option value="en-US-ChristopherNeural">Christopher (Deep BBC/Vox English)</option>
+                <option value="en-US-BrianNeural">Brian (Engaging Documentary English)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <div class="checkbox-pill">
+                <input type="checkbox" id="doc-clippings" checked>
+                <label for="doc-clippings">📰 Front-Page Newspaper Headlines</label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="checkbox-pill">
+                <input type="checkbox" id="doc-subtitles">
+                <label for="doc-subtitles">💬 Burn Subtitles on Video (Off by default)</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-pill">
+              <input type="checkbox" id="doc-yt-upload">
+              <label for="doc-yt-upload">🚀 Auto-Publish to YouTube (Data API v3)</label>
+            </div>
+          </div>
+
+          <!-- YouTube Settings (Expandable) -->
+          <div id="yt-settings-box" style="display:none; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+              <span style="font-weight: 600; font-size: 0.9rem; color: #ff007f;">📺 YouTube Upload Configuration</span>
+              <button type="button" class="action-btn" id="btn-check-yt" style="padding: 4px 12px; font-size: 0.8rem;">Check Status</button>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size: 0.8rem;">Privacy Status</label>
+                <select id="doc-yt-privacy" style="font-size: 0.85rem; padding: 8px;">
+                  <option value="unlisted" selected>Unlisted (Recommended for Review)</option>
+                  <option value="public">Public (Instant Publish)</option>
+                  <option value="private">Private (Only You)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size: 0.8rem;">Status</label>
+                <div id="yt-status-display" style="font-size: 0.85rem; color: #a0aec0; padding: 8px 0;">Checking connection...</div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="btn-submit-doc" style="background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #000; font-weight: 700;">
+            <span class="btn-text">🎙️ Generate 5-Minute Documentary & Explainer</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </form>
+
         <!-- Mode 1: Text to Reel -->
-        <form id="form-text_to_video" class="mode-form active">
+        <form id="form-text_to_video" class="mode-form">
           <div class="form-header">
             <h3>Viral Shorts & Reel Generator</h3>
             <p>Generate high-retention viral reels from a single prompt with Hormozi-style Devanagari subtitles.</p>

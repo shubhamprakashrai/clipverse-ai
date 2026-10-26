@@ -263,3 +263,89 @@ def generate_ai_cartoon_scene_image(
             return output_path
 
     return output_path
+
+
+def generate_newspaper_headline_card(
+    headline_text: str,
+    output_path: Path,
+    aspect_ratio: str = "16:9",
+    category_label: str = "SPECIAL INVESTIGATIVE DISCLOSURE"
+) -> Path:
+    """
+    Generate an authentic retro/investigative front-page newspaper clipping visual.
+    Popular in Vox, Johnny Harris, and Dhruv Rathee investigative documentaries.
+    """
+    from PIL import Image, ImageDraw, ImageFont
+    import textwrap
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    w, h = (1920, 1080) if aspect_ratio == "16:9" else (1080, 1920)
+
+    # Aged paper parchment background
+    base_color = (238, 233, 222) if aspect_ratio == "16:9" else (235, 230, 218)
+    img = Image.new("RGB", (w, h), color=base_color)
+    draw = ImageDraw.Draw(img)
+
+    pad_x = 80 if w == 1920 else 40
+    pad_y = 60 if h == 1080 else 80
+
+    # 1. Newspaper Outer Frame
+    draw.rectangle([(pad_x, pad_y), (w - pad_x, h - pad_y)], outline=(45, 45, 45), width=4)
+    draw.rectangle([(pad_x + 8, pad_y + 8), (w - pad_x - 8, h - pad_y - 8)], outline=(120, 120, 120), width=1)
+
+    # 2. Newspaper Masthead / Title
+    header_y = pad_y + 70
+    draw.text((w // 2, header_y), "THE INVESTIGATIVE GAZETTE", fill=(20, 20, 20), anchor="mm")
+    draw.line([(pad_x + 20, header_y + 40), (w - pad_x - 20, header_y + 40)], fill=(30, 30, 30), width=3)
+    draw.line([(pad_x + 20, header_y + 46), (w - pad_x - 20, header_y + 46)], fill=(50, 50, 50), width=1)
+
+    # 3. Sub-header date & dossier info
+    info_y = header_y + 65
+    draw.text((pad_x + 30, info_y), f"ARCHIVE DOSSIER • {category_label.upper()}", fill=(75, 75, 75))
+    draw.text((w - pad_x - 30, info_y), "OFFICIAL EVIDENCE", fill=(120, 20, 20), anchor="ra")
+    draw.line([(pad_x + 20, info_y + 25), (w - pad_x - 20, info_y + 25)], fill=(30, 30, 30), width=2)
+
+    # 4. Bold Dramatic Headline
+    clean_headline = headline_text.upper().strip()
+    words = clean_headline.split()
+    wrap_width = 32 if w == 1920 else 18
+    wrapped_lines = textwrap.wrap(clean_headline, width=wrap_width)
+
+    start_hl_y = info_y + 80
+    line_spacing = 65 if w == 1920 else 55
+    for i, line in enumerate(wrapped_lines[:4]):
+        draw.text((w // 2, start_hl_y + (i * line_spacing)), line, fill=(10, 10, 10), anchor="mm")
+
+    # Divider below headline
+    div_y = start_hl_y + (len(wrapped_lines[:4]) * line_spacing) + 30
+    draw.line([(pad_x + 40, div_y), (w - pad_x - 40, div_y)], fill=(80, 80, 80), width=2)
+
+    # 5. Simulated Newspaper Article Columns & Red "CONFIDENTIAL" Stamp
+    col_start_y = div_y + 40
+    col_w = (w - (pad_x * 2) - 120) // 3 if w == 1920 else (w - (pad_x * 2) - 40)
+    simulated_lines = [
+        "In a startling sequence of leaked documents and financial disclosures, multiple high-ranking officials confirmed yesterday...",
+        "Investigators uncovered irregular transactions dating back several years through shell companies, raising severe questions...",
+        "The subsequent fallout led to unprecedented market fluctuations and emergency sessions behind closed ministerial doors..."
+    ]
+
+    if w == 1920:
+        for c in range(3):
+            cx = pad_x + 40 + (c * (col_w + 40))
+            draw.text((cx, col_start_y), f"COLUMN {c+1}: DEEP INVESTIGATION", fill=(80, 80, 80))
+            wrapped_body = textwrap.wrap(simulated_lines[c], width=42)
+            for j, bline in enumerate(wrapped_body[:6]):
+                draw.text((cx, col_start_y + 35 + (j * 28)), bline, fill=(90, 90, 90))
+    else:
+        wrapped_body = textwrap.wrap(simulated_lines[0], width=35)
+        for j, bline in enumerate(wrapped_body[:6]):
+            draw.text((pad_x + 30, col_start_y + (j * 32)), bline, fill=(90, 90, 90))
+
+    # Red Stamp: CONFIDENTIAL / EXPOSED
+    stamp_x, stamp_y = (w - pad_x - 220, h - pad_y - 120) if w == 1920 else (w // 2 - 120, h - pad_y - 180)
+    draw.rectangle([(stamp_x, stamp_y), (stamp_x + 200, stamp_y + 70)], outline=(180, 20, 20), width=4)
+    draw.text((stamp_x + 100, stamp_y + 35), "CLASSIFIED", fill=(180, 20, 20), anchor="mm")
+
+    img.save(output_path, quality=95)
+    logger.info(f"Generated newspaper headline card: {output_path.name}")
+    return output_path

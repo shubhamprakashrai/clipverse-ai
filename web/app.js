@@ -4,7 +4,7 @@
 
 // Application State
 const state = {
-  activeMode: 'text_to_video',
+  activeMode: 'documentary',
   isProTier: false, // Default is Free Tier (1 video free, watermark ON)
   currentJobId: null,
   pollInterval: null,
@@ -542,6 +542,96 @@ function loadSampleMarsReel() {
       hashtags: ['#mars', '#spacefacts', '#sciencefacts', '#solarsystem', '#reels', '#viralshorts', '#hindifacts', '#universe', '#chandrayaan', '#isro', '#nasa', '#astronomy', '#amazingfacts', '#knowledge', '#reelcraft']
     },
     script: 'Mars yaani Lal Grah ke 3 hairatangez rahasya. Pehla: Mars par suryast neela dikhta hai. Doosra: Mars par hamare solar system ka sabse bada jwalamukhi Olympus Mons maujood hai. Teesra: Mars ka ek saal dharti ke 687 dinon ke barabar hota hai.'
-  });
+  
+    // YouTube Settings Toggle
+    const ytToggle = document.getElementById('doc-yt-upload');
+    const ytBox = document.getElementById('yt-settings-box');
+    if (ytToggle && ytBox) {
+      ytToggle.addEventListener('change', (e) => {
+        ytBox.style.display = e.target.checked ? 'block' : 'none';
+        if (e.target.checked) checkYouTubeStatus();
+      });
+    }
+
+    const checkYtBtn = document.getElementById('btn-check-yt');
+    if (checkYtBtn) {
+      checkYtBtn.addEventListener('click', checkYouTubeStatus);
+    }
+
+    async function checkYouTubeStatus() {
+      const disp = document.getElementById('yt-status-display');
+      if (!disp) return;
+      disp.innerHTML = 'Checking...';
+      try {
+        const res = await fetch('/api/v1/youtube/status');
+        const data = await res.json();
+        if (data.authenticated && data.channel_name) {
+          disp.innerHTML = `<span style="color:#00f2fe;">Connected: ${data.channel_name}</span>`;
+        } else if (data.configured) {
+          disp.innerHTML = `<span style="color:#ffaa00;">Configured! Run OAuth to link channel.</span>`;
+        } else {
+          disp.innerHTML = `<span style="color:#a0aec0;">Free Quota Available (Save client_secrets.json in storage/)</span>`;
+        }
+      } catch (err) {
+        disp.innerHTML = `<span style="color:#ff4444;">Status check error</span>`;
+      }
+    }
+
+    // Mode 6: Cinematic Documentary (5-10 Min)
+    const docForm = document.getElementById('form-documentary');
+    if (docForm) {
+      docForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const topic = document.getElementById('doc-topic').value;
+        const theme = document.getElementById('doc-theme').value;
+        const duration = document.getElementById('doc-duration').value;
+        const aspect = document.getElementById('doc-aspect').value;
+        const language = document.getElementById('doc-language').value;
+        const voice = document.getElementById('doc-voice').value;
+        const clippings = document.getElementById('doc-clippings').checked;
+        const autoUpload = document.getElementById('doc-yt-upload').checked;
+        const privacy = document.getElementById('doc-yt-privacy').value;
+
+        const subtitlesEnabled = document.getElementById('doc-subtitles') ? document.getElementById('doc-subtitles').checked : false;
+
+        const payload = {
+          topic: topic,
+          theme: theme,
+          duration_mode: duration,
+          language: language,
+          aspect_ratio: aspect,
+          voice_name: voice,
+          subtitles_enabled: subtitlesEnabled,
+          include_newspaper_clippings: clippings,
+          auto_upload_youtube: autoUpload,
+          youtube_privacy: privacy,
+          watermark_enabled: !state.isProTier,
+          generate_social_pack: true
+        };
+
+        try {
+          setSubmitLoading('btn-submit-doc', true, 'Drafting 5-Min Screenplay & Researching Archives...');
+          const res = await fetch('/api/v1/generate/documentary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.job_id) {
+            state.activeJobId = data.job_id;
+            switchHudView('progress');
+            pollJob(data.job_id);
+          } else {
+            alert('Failed to start documentary generator: ' + JSON.stringify(data));
+          }
+        } catch (err) {
+          alert('Network or server error: ' + err.message);
+        } finally {
+          setSubmitLoading('btn-submit-doc', false, '🎙️ Generate 5-Minute Documentary & Explainer');
+        }
+      });
+    }
+
+});
   showToast('🎬 Loaded Mars Sample Reel into Player & Social Pack!');
 }

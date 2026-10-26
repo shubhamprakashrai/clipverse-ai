@@ -9,7 +9,8 @@ from app.models.request import (
     PersonalReelRequest,
     ProductAdRequest,
     DigitalInvitationRequest,
-    CartoonStoryRequest
+    CartoonStoryRequest,
+    DocumentaryRequest
 )
 from app.models.response import JobResponse, JobStatus
 from app.services import task_manager
@@ -86,3 +87,42 @@ def get_job_status(job_id: str):
         raise HTTPException(status_code=404, detail="Job ID not found")
     return job
 
+
+
+@router.post("/generate/documentary", response_model=JobResponse, summary="Mode 6: Long-Form Cinematic Documentary (5-10 Min)")
+def generate_documentary(req: DocumentaryRequest, background_tasks: BackgroundTasks):
+    """
+    Mode 6: Long-form Vox / MagnatesMedia / Dhruv Rathee style investigative documentary.
+    Supports 5-min, 8-min, and 10-min formats with newspaper headline clippings, archival B-roll, and optional YouTube upload.
+    """
+    job_id = str(uuid.uuid4())
+    job = JobResponse(job_id=job_id, status=JobStatus.PROCESSING, progress=5, current_stage="Documentary job queued...")
+    task_manager.jobs_db[job_id] = job
+    background_tasks.add_task(task_manager.run_documentary_video, job_id, req)
+    return job
+
+@router.get("/youtube/status", summary="Check YouTube Data API credentials & connection")
+def get_yt_status():
+    from app.services import youtube_uploader
+    return youtube_uploader.get_youtube_auth_status()
+
+@router.post("/youtube/upload", summary="Manually publish an existing job to YouTube")
+def publish_to_youtube(job_id: str, privacy: str = "unlisted"):
+    job = task_manager.get_job(job_id)
+    if not job or not job.video_url:
+        raise HTTPException(status_code=400, detail="Job has no completed video")
+
+    from app.services import youtube_uploader
+    video_path = settings.OUTPUT_DIR / job_id / "final_reel.mp4"
+    title = (job.social_pack or {}).get("title", f"Documentary - {job_id[:8]}")
+    desc = (job.social_pack or {}).get("description", job.script or "")
+    tags = (job.social_pack or {}).get("hashtags", ["documentary", "history"])
+
+    res = youtube_uploader.upload_video_to_youtube(
+        video_path=video_path,
+        title=title,
+        description=desc,
+        tags=tags,
+        privacy_status=privacy
+    )
+    return res
